@@ -17,6 +17,7 @@ app.config['SECRET_KEY'] = 'I have a dream'
 app.config['UPLOADED_PHOTOS_DEST'] = os.path.join(app.root_path, 'media')
 video_ext = ('mp4','mkv')
 app.config['UPLOADED_PHOTOS_ALLOW'] = video_ext
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 
 media = UploadSet('photos', IMAGES)
 

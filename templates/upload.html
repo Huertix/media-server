@@ -3,6 +3,8 @@
 
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
+        {{ form.user_name.label }}
+        {{ form.user_name }}
         {{ form.photo(multiple="multiple")}}
         {% for error in form.photo.errors %}
             <span style="color: red;">{{ error }}</span>

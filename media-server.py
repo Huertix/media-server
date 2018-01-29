@@ -9,7 +9,8 @@ from flask import Flask, render_template, redirect, url_for, request, send_file
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import SubmitField
+from wtforms import SubmitField, StringField
+from wtforms.validators import DataRequired
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'I have a dream'
@@ -24,6 +25,7 @@ patch_request_class(app)  # set maximum file size, default is 16MB
 
 
 class UploadForm(FlaskForm):
+    user_name = StringField('user_name', validators=[DataRequired()])
     photo = FileField(validators=[FileAllowed(media, u'media Only!'), FileRequired(u'Choose a file!')])
     submit = SubmitField(u'Upload')
 
@@ -32,10 +34,12 @@ class UploadForm(FlaskForm):
 def upload_file():
     form = UploadForm()
     if form.validate_on_submit():
+        user_name = request.form.get('user_name')
         for filename in request.files.getlist('photo'):
             # name = filename.filename
             # photos.save(filename, name=name + '.')
-            if not os.path.isfile(os.path.join(app.root_path, 'media', filename.filename)):
+            if not os.path.isfile(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename)):
+                filename.filename = user_name + '_' + filename.filename
                 media.save(filename)
         success = True
     else:

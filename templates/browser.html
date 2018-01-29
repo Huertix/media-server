@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <p>URL: {{ file_url }}</p>
+    {% if video %}
+        <video width="100%" controls>
+          <source src="{{ file_url }}" type="video/mp4">
+        </video>
+    {% else %}
+        <img width="100%" src="{{ file_url }}">
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block body %}
+    <form id="dw_form" method=POST action="{{ url_for('manage_file') }}">
+        <ul>
+            <ol>
+                <div class="row">
+                      <div class="form-check">
+                        <input type="checkbox" class="form-check-input" onclick="selectAll();" id="select_all">
+                        <label class="form-check-label" for="exampleCheck1">Select All</label>
+                      </div>
+                </div>
+            </ol>
+            {% for file in files %}
+                <ol>
+                    <div class="row" style="margin-top: 20px">
+                        <div class="col-md-1">
+                            <input type="checkbox" name="media" value="{{ file.name }}" class="Checkbox">
+                        </div>
+                        <div class="col-md-1">
+                             <a href="{{ url_for('open_file', filename=file.name) }}" onclick="load_spinner()">
+                                {% if file.video %}
+                                    <video class="d-flex align-self-center mr-3" src="{{ file.url }}" width="60px"></video>
+                                {% else %}
+                                    <img class="d-flex align-self-center mr-3" src="{{ file.url }}" width="60px">
+                                {% endif %}
+                             </a>
+                        </div>
+                        <div class="col-md-8">
+                            {{ file.name }}
+                        </div>
+
+{#                        <div class="col-md-1">#}
+{#                            <a href="{{ url_for('delete_file', filename=file.name) }}"><i class="fa fa-trash-o" aria-hidden="true"></i></a><br>#}
+{#                        </div>#}
+                    </div>
+                </ol>
+            {% endfor %}
+        </ul>
+        <button type="submit" class="btn btn-primary">Download</button>
+    </form>
+
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        var checked = false
+        function selectAll() {
+            console.log( "ready!" );
+
+            if(checked) {
+                $('.Checkbox').prop('checked', false);
+            } else {
+                $('.Checkbox').prop('checked', true);
+            }
+
+            checked = !checked;
+        }
+    </script>
+
+{% endblock %}

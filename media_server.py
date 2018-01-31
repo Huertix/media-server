@@ -1,6 +1,7 @@
 
 import os
 import time
+from PIL import Image
 import hashlib
 import zipfile
 from io import BytesIO
@@ -42,6 +43,12 @@ def upload_file():
             if not os.path.isfile(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename)):
                 filename.filename = user_name + '_' + filename.filename
                 media.save(filename)
+                try:
+                    im = Image.open(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename))
+                    im.thumbnail(60, 60)
+                    im.save(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename), "gif")
+                except Exception:
+                    print("fail creating thumb")
         success = True
     else:
         success = False
@@ -70,13 +77,40 @@ def manage_file():
 
     files_list = os.listdir(app.config['UPLOADED_PHOTOS_DEST'])
 
+    files_list.sort()
+
     files = []
     for file in files_list:
-        ext = file.split('.')[-1]
-        if ext in video_ext + IMAGES:
-            files.append({'name': file, 'url': media.url(file), 'video': ext in video_ext})
+        file_name, ext = os.path.splitext(file)
+        ext = ext.split('.')[-1]
+        if ext in video_ext + IMAGES and 'thumb' not in file:
+            files.append({'name': file,
+                          'url': media.url(file),
+                          'thumb': media.url(file_name + '_thumb.jpg'),
+                          'video': ext in video_ext})
 
     return render_template('manage.html', files=files)
+
+@app.route('/thumbs', methods=["GET"])
+def process_thumbs():
+    files_list = os.listdir(app.config['UPLOADED_PHOTOS_DEST'])
+    total_files = len(files_list)
+    size = 128, 128
+    total_processed = 0
+    for file in files_list:
+        file_name, ext = os.path.splitext(file)
+        ext = ext.split('.')[-1]
+        if ext in IMAGES:
+            try:
+                im = Image.open(os.path.join(app.root_path, 'media', file)).convert('RGB')
+                im.thumbnail(size)
+                im.save(os.path.join(app.root_path, 'media', file_name + '_thumb.jpg'), "JPEG")
+                total_processed += 1
+            except Exception as ex:
+                print("fail creating thumb: {}".format(ex))
+
+    return "Total files: {} -> processed: {}".format(total_files, total_processed)
+
 
 
 @app.route('/open/<filename>')

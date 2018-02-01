@@ -6,7 +6,7 @@ import hashlib
 import zipfile
 from io import BytesIO
 
-from flask import Flask, render_template, redirect, url_for, request, send_file
+from flask import Flask, render_template, redirect, url_for, request, send_file, flash
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -69,19 +69,25 @@ def manage_file():
     if request.method == 'POST':
 
         all_selected = request.form.getlist('media')
-        all_files = [open(os.path.join(app.root_path, 'media', f), "rb") for f in all_selected]
 
-        memory_file = BytesIO()
-        with zipfile.ZipFile(memory_file, 'w') as zf:
-            for individualFile in all_files:
-                file_data = individualFile.read()
-                file_name = individualFile.name.split('/')[-1]
-                data = zipfile.ZipInfo(file_name)
-                data.date_time = time.localtime(time.time())[:6]
-                data.compress_type = zipfile.ZIP_DEFLATED
-                zf.writestr(data, file_data)
-        memory_file.seek(0)
-        return send_file(memory_file, attachment_filename='media.zip', as_attachment=True)
+        if len(all_selected) >=15:
+            flash("Max selected files allowed at a time are 15")
+
+        else:
+
+            all_files = [open(os.path.join(app.root_path, 'media', f), "rb") for f in all_selected]
+
+            memory_file = BytesIO()
+            with zipfile.ZipFile(memory_file, 'w') as zf:
+                for individualFile in all_files:
+                    file_data = individualFile.read()
+                    file_name = individualFile.name.split('/')[-1]
+                    data = zipfile.ZipInfo(file_name)
+                    data.date_time = time.localtime(time.time())[:6]
+                    data.compress_type = zipfile.ZIP_DEFLATED
+                    zf.writestr(data, file_data)
+            memory_file.seek(0)
+            return send_file(memory_file, attachment_filename='media.zip', as_attachment=True)
 
 
     files_list = os.listdir(app.config['UPLOADED_PHOTOS_DEST'])

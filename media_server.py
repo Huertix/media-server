@@ -32,6 +32,19 @@ class UploadForm(FlaskForm):
     submit = SubmitField(u'Upload')
 
 
+def process_thumb(file):
+    size = 128, 128
+    file_name, ext = os.path.splitext(file)
+    ext = ext.split('.')[-1]
+    if ext in IMAGES:
+        try:
+            im = Image.open(os.path.join(app.root_path, 'media', file)).convert('RGB')
+            im.thumbnail(size)
+            im.save(os.path.join(app.root_path, 'media', file_name + '_thumb.jpg'), "JPEG")
+        except Exception as ex:
+            print("fail creating thumb: {}".format(ex))
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     form = UploadForm()
@@ -43,12 +56,8 @@ def upload_file():
             if not os.path.isfile(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename)):
                 filename.filename = user_name + '_' + filename.filename
                 media.save(filename)
-                try:
-                    im = Image.open(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename))
-                    im.thumbnail(60, 60)
-                    im.save(os.path.join(app.root_path, 'media', user_name + '_' + filename.filename), "gif")
-                except Exception:
-                    print("fail creating thumb")
+                process_thumb(filename.filename)
+
         success = True
     else:
         success = False
@@ -91,23 +100,15 @@ def manage_file():
 
     return render_template('manage.html', files=files)
 
+
 @app.route('/thumbs', methods=["GET"])
 def process_thumbs():
     files_list = os.listdir(app.config['UPLOADED_PHOTOS_DEST'])
     total_files = len(files_list)
-    size = 128, 128
     total_processed = 0
     for file in files_list:
-        file_name, ext = os.path.splitext(file)
-        ext = ext.split('.')[-1]
-        if ext in IMAGES:
-            try:
-                im = Image.open(os.path.join(app.root_path, 'media', file)).convert('RGB')
-                im.thumbnail(size)
-                im.save(os.path.join(app.root_path, 'media', file_name + '_thumb.jpg'), "JPEG")
-                total_processed += 1
-            except Exception as ex:
-                print("fail creating thumb: {}".format(ex))
+        process_thumb(file)
+        total_processed += 1
 
     return "Total files: {} -> processed: {}".format(total_files, total_processed)
 
